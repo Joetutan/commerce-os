@@ -2,15 +2,15 @@
 
 A modular e-commerce platform for **inventory management** and **order orchestration**. Transactions are handled by a third-party provider.
 
-> Early development — scaffold and CI are in place; domain modules are in progress.
+> Early development - scaffold and CI are in place; domain modules are in progress.
 
 ## Domains
 
-- **Orders** — lifecycle, line items, pricing snapshots, state transitions.
-- **Inventory** — stock levels, reservations, releases, availability.
-- **Transactions** — payment sessions and webhooks via a third-party provider.
-- **Catalog** *(planned)* — products, variants, pricing.
-- **Identity** *(planned)* — customer and staff accounts.
+- **Orders** - lifecycle, line items, pricing snapshots, state transitions.
+- **Inventory** - stock levels, reservations, releases, availability.
+- **Transactions** - payment sessions and webhooks via a third-party provider.
+- **Catalog** *(planned)* - products, variants, pricing.
+- **Identity** *(planned)* - customer and staff accounts.
 
 ## Stack
 

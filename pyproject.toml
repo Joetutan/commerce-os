@@ -13,3 +13,7 @@ dependencies = [
     "ruff>=0.17.5",
     "sqlalchemy>=2.1.9",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
