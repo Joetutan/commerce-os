@@ -36,6 +36,7 @@ app/models/       SQLAlchemy models
 app/utils/        shared helpers
 migrations/       Alembic migrations
 tests/            test suite
+docs/             developer cheatsheet
 ```
 
 ## Commands
@@ -49,6 +50,10 @@ uv run alembic revision --autogenerate -m "change"
 ```
 
 CI runs lint, format checks, and tests on Python 3.13 and 3.14.
+
+See [`docs/dev-cheatsheet.md`](docs/dev-cheatsheet.md) for the full daily toolbox: settings, Docker, SQLAlchemy, Alembic, testing, auth checks, and troubleshooting.
+
+Testing: [`docs/testing.md`](docs/testing.md) covers the current auth suite; [`docs/testing-waitlist.md`](docs/testing-waitlist.md) tracks future coverage.
 
 ## Configuration
 
