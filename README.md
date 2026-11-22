@@ -7,10 +7,11 @@ A modular e-commerce platform for **inventory management** and **order orchestra
 ## Domains
 
 - **Orders** - lifecycle, line items, pricing snapshots, state transitions.
+- **Cart** - pre-checkout intent: mutable line items, live pricing, conversion to an order.
 - **Inventory** - stock levels, reservations, releases, availability.
 - **Transactions** - payment sessions and webhooks via a third-party provider.
-- **Catalog** *(planned)* - products, variants, pricing.
-- **Identity** *(planned)* - customer and staff accounts.
+- **Catalog** - products, variants, pricing. Public read-only routes; admin writes planned.
+- **Identity** - accounts, authentication, and roles.
 
 ## Stack
 
@@ -20,7 +21,7 @@ Python 3.13+ · FastAPI · Pydantic v2 · SQLAlchemy 2.x · Alembic · PyJWT · 
 
 ```bash
 uv sync
-touch .env   # DATABASE_URL, JWT_SECRET, provider keys
+touch .env   # DATABASE_URL, REDIS_URL, JWT_SECRET
 uv run fastapi dev app/main.py
 ```
 
@@ -29,10 +30,12 @@ Docs at `http://127.0.0.1:8000/docs`.
 ## Layout
 
 ```
-app/api/          routers and schemas
-app/service/      business rules and orchestration
-app/repository/   persistence
+app/api/          routers
+app/configs/      settings, database, security
 app/models/       SQLAlchemy models
+app/repository/   persistence
+app/schemas/      request/response models
+app/service/      business rules and orchestration
 app/utils/        shared helpers
 migrations/       Alembic migrations
 tests/            test suite
@@ -53,7 +56,9 @@ CI runs lint, format checks, and tests on Python 3.13 and 3.14.
 
 See [`docs/dev-cheatsheet.md`](docs/dev-cheatsheet.md) for the full daily toolbox: settings, Docker, SQLAlchemy, Alembic, testing, auth checks, and troubleshooting.
 
-Testing: [`docs/testing.md`](docs/testing.md) covers the current auth suite; [`docs/testing-waitlist.md`](docs/testing-waitlist.md) tracks future coverage.
+Testing: [`docs/testing.md`](docs/testing.md) covers the auth and catalog suites; [`docs/testing-waitlist.md`](docs/testing-waitlist.md) tracks future coverage.
+
+Catalog: [`docs/catalog-todo.md`](docs/catalog-todo.md) tracks admin endpoints and remaining catalog work.
 
 ## Configuration
 
@@ -62,19 +67,24 @@ Set in `.env` (git-ignored):
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | SQLAlchemy connection string. |
+| `REDIS_URL` | Redis connection string (required by settings). |
 | `JWT_SECRET` | Token signing key. |
 | `PAYMENT_PROVIDER_API_KEY` | Provider credential. |
 | `PAYMENT_PROVIDER_WEBHOOK_SECRET` | Webhook signature verification. |
 
+`PAYMENT_PROVIDER_*` is reserved for the planned Transactions domain and is not read by the app yet.
+
 ## Roadmap
 
 - [x] Scaffold and CI
-- [ ] Database session and Alembic baseline
-- [ ] Catalog and inventory models
+- [x] Database session and Alembic baseline
+- [x] Catalog models and public routes
+- [ ] Catalog admin endpoints
+- [ ] Inventory models
 - [ ] Inventory reservations
 - [ ] Provider integration and webhooks
 - [ ] Order state machine
-- [ ] JWT authentication
+- [x] JWT authentication
 
 ## License
 

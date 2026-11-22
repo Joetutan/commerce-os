@@ -95,11 +95,16 @@ def _migrate_test_database() -> None:
 
 @pytest.fixture(autouse=True)
 def _clean_database(_migrate_test_database: None) -> None:
-    """Truncate `users` before each test so tests stay order-independent."""
+    """Truncate catalog and auth tables before each test."""
     from app.configs.db_connection import get_engine
 
     with get_engine().begin() as connection:
-        connection.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
+        connection.execute(
+            text(
+                "TRUNCATE TABLE product_variants, products, users "
+                "RESTART IDENTITY CASCADE"
+            )
+        )
 
 
 @pytest.fixture
