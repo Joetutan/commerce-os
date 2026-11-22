@@ -2,7 +2,9 @@
 
 ## Current suite
 
-The MVP auth suite lives in `tests/test_auth_mvp.py` and covers the flow from HTTP entry to the database.
+Two suites run against a real Postgres database, from HTTP entry down to the schema.
+
+### Auth (`tests/test_auth_mvp.py`, 10 tests)
 
 | Test | What it verifies |
 | --- | --- |
@@ -16,6 +18,25 @@ The MVP auth suite lives in `tests/test_auth_mvp.py` and covers the flow from HT
 | `test_me_rejects_malformed_token` | `401` with `WWW-Authenticate: Bearer` |
 | `test_me_rejects_expired_token` | `401` for an expired JWT |
 | `test_duplicate_email_violates_db_constraint` | The database unique constraint rejects duplicates |
+
+### Catalog (`tests/test_catalog_mvp.py`, 16 tests)
+
+| Test | What it verifies |
+| --- | --- |
+| `test_list_products_returns_only_active` | List excludes draft and archived products |
+| `test_list_products_paginates` | `limit`/`offset` slice results and echo in the envelope |
+| `test_list_products_returns_empty_page` | Empty catalog returns `200` with `items: []` and `total: 0` |
+| `test_get_product_returns_active_product` | Detail by slug returns the product and its variants |
+| `test_get_product_hides_inactive_products` | Draft and archived slugs return `404` (parametrized) |
+| `test_get_product_unknown_slug_returns_404` | Unknown slug returns `404` |
+| `test_get_variant_returns_active_variant` | Variant by SKU returns the variant |
+| `test_get_variant_hides_inactive_products` | Variants of draft/archived products return `404` (parametrized) |
+| `test_get_variant_unknown_sku_returns_404` | Unknown SKU returns `404` |
+| `test_product_create_normalizes_slug` | `ProductCreate` trims and lowercases the slug |
+| `test_product_create_requires_a_variant` | A product needs at least one variant |
+| `test_variant_create_rejects_negative_price` | Negative prices fail schema validation |
+| `test_variant_create_rejects_lowercase_currency` | Currency must be three uppercase letters |
+| `test_negative_price_violates_db_constraint` | The database check constraint rejects negative prices |
 
 ## Running the suite
 
@@ -31,6 +52,12 @@ Run the auth suite:
 uv run pytest tests/test_auth_mvp.py -q
 ```
 
+Run the catalog suite:
+
+```bash
+uv run pytest tests/test_catalog_mvp.py -q
+```
+
 Run everything:
 
 ```bash
@@ -40,8 +67,8 @@ uv run pytest -q
 Expected:
 
 ```
-..........                                                               [100%]
-10 passed
+..........................                                               [100%]
+26 passed
 ```
 
 ## How the test database works
@@ -53,7 +80,7 @@ Expected:
 - Creates the test database if it does not exist.
 - Runs `alembic upgrade head` once per test session.
 - Overrides `JWT_SECRET`, `JWT_ALGORITHM`, and expiry for deterministic tests.
-- Truncates `users` before each test.
+- Truncates `product_variants`, `products`, and `users` before each test.
 - Provides `client` (TestClient) and `db_session` fixtures.
 
 The test database is separate from the development database. Tests never write to `commerce_db_dev`.
@@ -79,11 +106,12 @@ SQLite would require batch migrations and would not exercise the same constraint
 
 ```
 tests/
-├── conftest.py          # test DB, migrations, isolation, fixtures
-└── test_auth_mvp.py     # MVP auth workflow
+├── conftest.py            # test DB, migrations, isolation, fixtures
+├── test_auth_mvp.py       # MVP auth workflow
+└── test_catalog_mvp.py    # public catalog workflow
 ```
 
-The suite is integration-oriented: it goes through FastAPI, the service layer, SQLAlchemy, and Postgres. Unit tests for individual layers are on the waitlist.
+The suites are integration-oriented: they go through FastAPI, the service layer, SQLAlchemy, and Postgres. Unit tests for individual layers are on the waitlist.
 
 ## CI
 

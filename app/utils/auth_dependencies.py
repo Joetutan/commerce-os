@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.configs.auth_security import security
 from app.configs.db_connection import get_db
-from app.models.user_model import User
+from app.models.user_model import User, UserRole
 from app.repository.user_repository import UserRepository
 
 # Declares the bearer scheme in OpenAPI and points Swagger at the login route.
@@ -53,4 +53,12 @@ def get_current_user(
     if user is None:
         raise credentials_exception
 
+    return user
+
+
+def require_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    if user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required"
+        )
     return user
