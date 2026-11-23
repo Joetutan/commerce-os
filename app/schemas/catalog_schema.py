@@ -30,7 +30,6 @@ class ProductCreate(BaseModel):
     slug: str = Field(min_length=1, max_length=255)
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
-    variants: list[VariantCreate] = Field(default_factory=list, min_length=1)
 
     @field_validator("slug")
     @classmethod
@@ -52,6 +51,25 @@ class VariantResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class VariantUpdate(BaseModel):
+    sku: str | None = Field(default=None, min_length=1, max_length=64)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    price: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+    attributes: dict[str, str] | None = Field(default=None)
+
+    @field_validator("sku")
+    @classmethod
+    def normalize_sku(cls, value: str) -> str:
+        """Trim the SKU and reject characters that break lookups."""
+        value = value.strip()
+        if not fullmatch(r"[A-Za-z0-9._-]+", value):
+            raise ValueError(
+                "sku may contain letters, digits, dots, underscores, and hyphens"
+            )
+        return value
+
+
 class ProductResponse(BaseModel):
     id: UUID
     slug: str
@@ -60,6 +78,21 @@ class ProductResponse(BaseModel):
     status: ProductStatus
     variants: list[VariantResponse]
     model_config = {"from_attributes": True}
+
+
+class ProductUpdate(BaseModel):
+    slug: str | None = Field(default=None, min_length=1, max_length=255)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = None
+
+    @field_validator("slug")
+    @classmethod
+    def normalize_slug(cls, value: str | None) -> str:
+        """Normalize to lowercase kebab-case so URLs stay stable."""
+        value = value.strip().lower()
+        if not fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value):
+            raise ValueError("slug must be lowercase kebab-case")
+        return value
 
 
 class PaginatedProducts(BaseModel):
