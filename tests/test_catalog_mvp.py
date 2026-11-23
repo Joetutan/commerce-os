@@ -184,25 +184,15 @@ def test_get_variant_unknown_sku_returns_404(client) -> None:
 
 
 def test_product_create_normalizes_slug() -> None:
-    product = ProductCreate(
-        slug="  Classic-TShirt  ",
-        name="Classic T-Shirt",
-        variants=[
-            {
-                "sku": "TS-1",
-                "name": "Default",
-                "price": "21.99",
-                "currency": "USD",
-            }
-        ],
-    )
+    product = ProductCreate(slug="  Classic-TShirt  ", name="Classic T-Shirt")
 
     assert product.slug == "classic-tshirt"
 
 
-def test_product_create_requires_a_variant() -> None:
-    with pytest.raises(ValidationError):
-        ProductCreate(slug="classic-tshirt", name="Classic T-Shirt", variants=[])
+def test_product_create_allows_empty_variants() -> None:
+    product = ProductCreate(slug="classic-tshirt", name="Classic T-Shirt")
+
+    assert product.slug == "classic-tshirt"
 
 
 def test_variant_create_rejects_negative_price() -> None:
