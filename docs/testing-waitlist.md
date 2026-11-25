@@ -1,6 +1,6 @@
 # Testing Waitlist
 
-Tests to explore after the MVP auth suite. The current suite is documented in [`testing.md`](testing.md).
+Tests to explore after the current MVP suites. The active suites are documented in [`testing.md`](testing.md).
 
 ## Infrastructure
 
@@ -99,6 +99,30 @@ Tests to explore after the MVP auth suite. The current suite is documented in [`
 - [ ] `/me` with a token for a deleted user returns `401`.
 - [ ] `/me` with a wrong-secret token returns `401`.
 
+## Cart
+
+Coverage gaps left after `tests/test_cart_mvp.py` (16 tests).
+
+- [ ] Two concurrent `POST`s for a new variant: one inserts, the other retries as an increment; both survive.
+- [ ] Two concurrent `POST`s for an existing line: atomic `quantity = quantity + n` yields the summed total.
+- [ ] Two concurrent first requests create one cart, not two.
+- [ ] Cap race: two adds that each fit under `99` alone but not together; exactly one succeeds and the line never exceeds `99`.
+- [ ] `IntegrityError` on `insert_item` from a foreign-key failure (variant deleted mid-request) does not surface as `409 "Quantity limit exceeded"`.
+- [ ] `POST` with an idempotency key replays safely (deferred until checkout).
+- [ ] Multi-currency cart is rejected or normalized rather than silently mixing currencies.
+- [ ] A line whose product is archived after being added stays visible and removable.
+- [ ] A line whose variant is deleted by the catalog admin disappears or raises a defined error.
+- [ ] Raw insert with `quantity = 0` violates `ck_cart_items_quantity`.
+- [ ] Duplicate `(cart_id, variant_id)` violates `uq_cart_items_cart_id_variant_id`.
+- [ ] Duplicate `user_id` in `carts` violates the unique constraint.
+- [ ] Deleting a user cascades to their cart and cart items.
+- [ ] Deleting a product or variant cascades to cart items.
+- [ ] `DELETE /api/v1/cart` clears all lines in one call (endpoint does not exist yet).
+- [ ] `Cart.updated_at` reflects item mutations (currently it does not).
+- [ ] `PUT`/`PATCH` on `/api/v1/cart` root is rejected or defined.
+- [ ] Cart response exposes no more product fields than `id`, `slug`, and `name`.
+- [ ] Response currency is `null` exactly when the cart is empty.
+
 ## End-to-end and security
 
 - [ ] Register, login, and `/me` for a second user.
@@ -107,7 +131,7 @@ Tests to explore after the MVP auth suite. The current suite is documented in [`
 - [ ] Tokens cannot be forged with another secret.
 - [ ] Tokens cannot use an unexpected algorithm.
 - [ ] Admin-only routes return `403` for customers.
-- [ ] Admin routes allow admins.
+- [x] Admin routes allow admins.
 - [ ] Public registration cannot create an admin.
 - [ ] Rate limiting is evaluated as an integration concern.
 
@@ -119,5 +143,6 @@ Tests to explore after the MVP auth suite. The current suite is documented in [`
 - [ ] `AuthService` raises `HTTPException` directly.
 - [ ] No password policy (`min_length`, complexity).
 - [ ] No `IntegrityError` handling on registration.
-- [ ] No admin authorization dependency yet.
+- [x] Admin authorization dependency exists (`require_admin`).
+- [ ] No admin negative-case tests (`401`/`403`) outside the happy-path suite.
 - [ ] No rate limiting.

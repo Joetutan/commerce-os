@@ -164,6 +164,8 @@ uv run alembic init migrations
 from app.configs.db_connection import Base
 from app.configs.env_settings import get_settings
 import app.models.user_model  # noqa: F401
+import app.models.catalog_model  # noqa: F401
+import app.models.cart_model  # noqa: F401
 
 config = context.config
 config.set_main_option(
@@ -362,11 +364,12 @@ context.configure(
 
 ## 6. Testing
 
-Current auth suite: `tests/test_auth_mvp.py` (10 tests). See [`testing.md`](testing.md) for the suite and [`testing-waitlist.md`](testing-waitlist.md) for future coverage.
+Current suites: `tests/test_auth_mvp.py` (10 tests), `tests/test_catalog_mvp.py` (16), `tests/test_catalog_admin.py` (5), and `tests/test_cart_mvp.py` (16) — 47 total. See [`testing.md`](testing.md) for the suites and [`testing-waitlist.md`](testing-waitlist.md) for future coverage.
 
 ```bash
 uv run pytest -q                    # all tests
 uv run pytest tests/test_auth_mvp.py -q # auth suite
+uv run pytest tests/test_cart_mvp.py -q # cart suite
 uv run pytest -q -k "login"         # by name
 uv run pytest -q -x                 # stop on first failure
 uv run pytest -q --lf               # last failed
