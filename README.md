@@ -10,7 +10,7 @@ A modular e-commerce platform for **inventory management** and **order orchestra
 - **Cart** - pre-checkout intent: mutable line items, live pricing, conversion to an order.
 - **Inventory** - stock levels, reservations, releases, availability.
 - **Transactions** - payment sessions and webhooks via a third-party provider.
-- **Catalog** - products, variants, pricing. Public read-only routes; admin writes planned.
+- **Catalog** - products, variants, pricing. Public read-only routes plus admin CRUD.
 - **Identity** - accounts, authentication, and roles.
 
 ## Stack
@@ -56,9 +56,13 @@ CI runs lint, format checks, and tests on Python 3.13 and 3.14.
 
 See [`docs/dev-cheatsheet.md`](docs/dev-cheatsheet.md) for the full daily toolbox: settings, Docker, SQLAlchemy, Alembic, testing, auth checks, and troubleshooting.
 
-Testing: [`docs/testing.md`](docs/testing.md) covers the auth and catalog suites; [`docs/testing-waitlist.md`](docs/testing-waitlist.md) tracks future coverage.
+Testing: [`docs/testing.md`](docs/testing.md) covers the auth, catalog, catalog admin, and cart suites; [`docs/testing-waitlist.md`](docs/testing-waitlist.md) tracks future coverage.
 
-Catalog: [`docs/catalog-todo.md`](docs/catalog-todo.md) tracks admin endpoints and remaining catalog work.
+Catalog: [`docs/catalog-todo.md`](docs/catalog-todo.md) tracks the remaining catalog follow-ups.
+
+Cart: [`docs/cart-todo.md`](docs/cart-todo.md) documents phase one.
+
+Sessions: [`docs/sessions-and-concurrency.md`](docs/sessions-and-concurrency.md) maps request-scoped sessions, transaction boundaries, and the concurrency trade-offs behind the cart.
 
 ## Configuration
 
@@ -78,13 +82,19 @@ Set in `.env` (git-ignored):
 
 - [x] Scaffold and CI
 - [x] Database session and Alembic baseline
+- [x] JWT authentication
 - [x] Catalog models and public routes
-- [ ] Catalog admin endpoints
-- [ ] Inventory models
+- [x] Catalog admin endpoints
+- [x] Cart phase one
+  - [x] `carts` and `cart_items` models + migration
+  - [x] Cart routes: read, add, update, remove
+  - [x] Live pricing and totals
+  - [x] Cart happy-path tests
+- [ ] Orders and checkout (convert cart to order)
+- [ ] Order state machine
+- [ ] Inventory stock levels
 - [ ] Inventory reservations
 - [ ] Provider integration and webhooks
-- [ ] Order state machine
-- [x] JWT authentication
 
 ## License
 
