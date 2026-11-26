@@ -77,7 +77,6 @@ class Order(Base):
     cancelled_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order",
         order_by="OrderItem.created_at",

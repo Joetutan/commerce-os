@@ -70,6 +70,22 @@ class CartRepository:
         )
         return self.db.execute(statement).rowcount > 0
 
+    def get_cart_for_update(self, user_id: UUID) -> Cart | None:
+        statement = (
+            select(Cart)
+            .where(Cart.user_id == user_id)
+            .options(
+                selectinload(Cart.items)
+                .selectinload(CartItem.variant)
+                .selectinload(ProductVariant.product)
+            )
+            .with_for_update()
+        )
+        return self.db.scalar(statement)
+
+    def clear_items(self, cart_id: UUID) -> None:
+        self.db.execute(delete(CartItem).where(CartItem.cart_id == cart_id))
+
     def delete_item(self, cart_id: UUID, item_id: UUID) -> bool:
         statement = delete(CartItem).where(
             CartItem.cart_id == cart_id, CartItem.id == item_id

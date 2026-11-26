@@ -301,7 +301,7 @@ WHERE cart_id = ... AND variant_id = ... AND quantity + 2 <= 99;
 | `unique(cart_id, variant_id)` | One line per variant per cart; also provides the conflict target for a future upsert. |
 | Insert-first, retry as increment | Readable happy path; the rare race is explicit in the `except`. |
 | Totals computed at read time | No denormalized price or total columns to go stale; catalog is the source of truth. |
-| Single-currency assumption | Totals are only meaningful when all lines share a currency. Multi-currency is deferred. |
+| Single-currency assumption | Phase one is single-currency: currency is snapshotted from the catalog, never converted, and mixed carts are rejected at checkout. Multi-currency is deferred. |
 | `GET /cart` may create | Simpler than a nullable cart id; idempotent in effect, but not a "safe" HTTP method. |
 | `POST` is a delta, `PATCH` is absolute | Matches user intent: "add two more" versus "make it two". `PATCH` is replay-safe; `POST` is not. |
 | Bulk `DELETE` + `rowcount` | One statement, no fetch, and `rowcount == 0` maps cleanly to `404`. |
@@ -367,7 +367,7 @@ Reproducing the true interleaved race needs two sessions/threads and a barrier b
 - The `IntegrityError` catch in `add_item` is broad. A foreign-key failure (for example, the variant disappearing between the active check and the insert) would fall through to `increment_item` and surface as `409 "Quantity limit exceeded"`.
 - `Cart.updated_at` does not move when only `cart_items` change; item mutations do not touch the parent row.
 - `cart_id` carries an index that duplicates the leading column of `unique(cart_id, variant_id)`. Harmless, but a future migration could drop it.
-- Multi-currency is unsupported: `currency` comes from the first line and no conversion happens.
+- Multi-currency is unsupported by decision: the order snapshots the catalog currency, no conversion is performed, and checkout rejects a mixed cart. Deferred.
 - The cart has no whole-cart clear endpoint (`DELETE /api/v1/cart`); clients remove lines one at a time.
 - Migration for carts exists (`ebc621a337d9`); `alembic check` is clean because `migrations/env.py` imports the cart model.
 

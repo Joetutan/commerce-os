@@ -97,6 +97,7 @@ Set in `.env` (git-ignored):
 - [ ] Inventory stock levels
 - [ ] Inventory reservations
 - [ ] Provider integration and webhooks
+- [ ] Multi-currency pricing and conversion
 
 ## License
 

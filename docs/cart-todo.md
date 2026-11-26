@@ -39,6 +39,7 @@ Out of scope:
 - Checkout and cart-to-order conversion.
 - Redis or client-side cart storage.
 - Idempotency keys for retried `POST` requests.
+- Multi-currency carts and currency conversion.
 
 ## Data model
 
@@ -153,7 +154,7 @@ Notes:
 - A line cannot exceed `99` units; the cap is enforced inside the atomic `UPDATE ... WHERE quantity + n <= 99`.
 - Only variants whose product is `active` can be added. Draft and archived products return `404`.
 - Existing lines remain visible if a product is later archived; they can still be updated or removed.
-- Phase one assumes a single global currency. The cart derives `currency` from the first line and does not convert. Multi-currency is deferred.
+- Phase one is single-currency. The cart derives `currency` from the first line and performs no conversion; checkout rejects a cart that mixes currencies. Multi-currency is deferred.
 - Totals are calculated in `CartService`, not on the ORM models.
 
 ## Implementation notes
@@ -192,7 +193,7 @@ See [`testing.md`](testing.md) for the suite details.
 
 ## Decisions settled
 
-- Single currency per cart in phase one; multi-currency later.
+- Single currency in phase one; currency comes from the catalog, is never converted, and multi-currency is deferred.
 - Create the cart lazily on the first request.
 - Maximum quantity per line is `99`.
 - Only active-product variants are addable; existing archived lines stay visible.

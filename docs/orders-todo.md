@@ -312,6 +312,7 @@ Notes:
 
 - Checkout is cart-based only; there is no direct "create order with arbitrary lines" route.
 - The client never sends prices, totals, or currency.
+- Phase one is single-currency: the order snapshots `currency` from the catalog and performs no conversion. A cart that mixes currencies is rejected with `409`. Multi-currency is deferred.
 - An order starts as `pending`.
 - Only the owning customer can read or cancel their order.
 - Customers can cancel only while `pending`; admins can cancel `pending` or `confirmed`.
@@ -371,6 +372,7 @@ Race coverage (two sessions plus a barrier) is tracked in [`testing-waitlist.md`
 - `SET NULL` FKs plus snapshots for product, variant, and user.
 - Order lifecycle: `pending -> confirmed -> fulfilled`, with `cancelled` reachable from `pending` and `confirmed`.
 - Payment stays a separate axis and is deferred.
+- Phase one is single-currency; currency is snapshotted from the catalog, never converted, and mixed carts are rejected.
 - Checkout takes no body and always starts from the current cart.
 - Customer cancel is limited to `pending`.
 - `SELECT ... FOR UPDATE` on the cart row is part of phase one.
