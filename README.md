@@ -62,6 +62,8 @@ Catalog: [`docs/catalog-todo.md`](docs/catalog-todo.md) tracks the remaining cat
 
 Cart: [`docs/cart-todo.md`](docs/cart-todo.md) documents phase one.
 
+Orders: [`docs/orders-todo.md`](docs/orders-todo.md) plans checkout and lifecycle.
+
 Sessions: [`docs/sessions-and-concurrency.md`](docs/sessions-and-concurrency.md) maps request-scoped sessions, transaction boundaries, and the concurrency trade-offs behind the cart.
 
 ## Configuration
@@ -95,6 +97,7 @@ Set in `.env` (git-ignored):
 - [ ] Inventory stock levels
 - [ ] Inventory reservations
 - [ ] Provider integration and webhooks
+- [ ] Multi-currency pricing and conversion
 
 ## License
 

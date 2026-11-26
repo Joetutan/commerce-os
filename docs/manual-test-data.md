@@ -263,7 +263,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' "$BASE/api/v1/admin/catalog/products" 
 
 ### Cart
 
-The cart is per customer and is created on the first cart request. Pick `ALICE_TOKEN` and US-dollar variants for the walkthrough; the dataset also contains EUR variants, and phase one assumes one currency per cart.
+The cart is per customer and is created on the first cart request. Pick `ALICE_TOKEN` and US-dollar variants for the walkthrough. Phase one is single-currency: the dataset also contains EUR variants, and a cart that mixes currencies is rejected at checkout.
 
 ```bash
 TEE_VARIANT=$(curl -sS "$BASE/api/v1/catalog/variant/TEE-BLK-S" | jq -r .id)

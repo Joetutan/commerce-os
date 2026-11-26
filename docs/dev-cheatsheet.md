@@ -143,6 +143,58 @@ with get_engine().connect() as c:
 "
 ```
 
+### 4.1 Table args, constraints, and indexes
+
+`__table_args__` — sometimes called "table args" or "table tags" — is where you declare rules that belong to the **table**, not to a single column. Column arguments cover `nullable`, `default`, and single-column `index=True`; composite constraints and named indexes cannot be expressed there.
+
+```python
+class Order(Base):
+    __tablename__ = "orders"
+    __table_args__ = (
+        CheckConstraint("subtotal >= 0", name="ck_orders_subtotal_non_negative"),
+        CheckConstraint("total >= 0", name="ck_orders_total_non_negative"),
+        Index("ix_orders_user_id_created_at", "user_id", "created_at"),
+    )
+```
+
+Accepted forms:
+
+| Form | Use for |
+| --- | --- |
+| `(...)` | `CheckConstraint`, `UniqueConstraint`, `Index`, `ExcludeConstraint` |
+| `{...}` | Table options such as `schema` or `comment` |
+| `(..., {...})` | Both; the dict must come last |
+
+#### Constraints
+
+- **`CheckConstraint`** — a database-level boolean rule. The service should validate too, but the database covers admin scripts, races, and future callers. Example: `ck_order_items_quantity_positive` keeps `quantity > 0` even if application code forgets.
+- **`UniqueConstraint`** — multi-column uniqueness. Example: `uq_cart_items_cart_id_variant_id` implements "one line per variant per cart" and doubles as the `ON CONFLICT` target. Single-column uniqueness is usually written `unique=True` on the column.
+- **`ForeignKey`** — referential integrity plus delete behaviour. Example: `cart_items.cart_id` uses `ondelete="CASCADE"` because a deleted cart should take its lines with it; `order_items.product_id` uses `ondelete="SET NULL"` plus snapshot columns because deleting a product must not erase an order's history.
+- **`Enum(..., create_constraint=True)`** — for non-native enums SQLAlchemy stores a `VARCHAR` plus a `CHECK (status IN (...))`. Always pass `values_callable`, or it stores member names (`PENDING`) instead of values (`pending`).
+- **Name everything** (`ck_`, `uq_`, `fk_`, `ix_`). Names are part of the schema, so `drop_constraint("ck_orders_status", ...)` is only possible if you named it. Renaming later requires a new migration.
+
+#### Indexes
+
+- `index=True` on a column creates a single-column index. Use it for foreign keys and frequent equality lookups.
+- `Index("name", "col_a", "col_b")` in `__table_args__` creates a composite index. The order of columns matters: `(user_id, created_at)` serves `WHERE user_id = ... ORDER BY created_at`; it does **not** efficiently serve `WHERE created_at = ...` alone. This is the leftmost-prefix rule.
+- A `UNIQUE` constraint already creates an index. Do not add a separate `Index` for the same columns; the cart's `(cart_id, variant_id)` unique pair covers `WHERE cart_id = ...` too, which is why a standalone `cart_id` index is redundant.
+- Foreign keys are **not** indexed automatically in Postgres. Add an index when you query or delete by that column, for example `order_items.order_id`.
+- Indexes speed reads but cost write throughput and disk. Add them for known query patterns, not by default. Partial indexes are available when needed: `Index("ix_...", "status", postgresql_where=text("status = 'pending'"))`.
+
+Example cases from this repo:
+
+| Situation | Declaration | Why |
+| --- | --- | --- |
+| One line per variant per cart | `UniqueConstraint("cart_id", "variant_id", name="uq_cart_items_cart_id_variant_id")` | Prevents duplicates and provides a conflict target |
+| Only valid order states | `Enum(OrderStatus, name="ck_orders_status", create_constraint=True, ...)` | Unknown statuses never reach the table |
+| Money cannot be negative | `CheckConstraint("total >= 0", name="ck_orders_total_non_negative")` | Last line of defence for totals |
+| "My orders, newest first" | `Index("ix_orders_user_id_created_at", "user_id", "created_at")` | Matches `WHERE user_id` + `ORDER BY created_at` |
+| Load/cascade an order's lines | `order_id ... index=True` | Fast item lookup and delete cascade |
+| Order survives catalog deletion | `ForeignKey(..., ondelete="SET NULL")` + snapshot columns | Keeps financial history readable |
+| Cart dies with its user | `ForeignKey(..., ondelete="CASCADE")` | The cart has no meaning without the user |
+
+`alembic revision --autogenerate` picks up `__table_args__` and column flags. Always review the generated file: it should contain the named checks, the composite index, and the intended `ondelete` behaviour. `uv run alembic check` then confirms the database matches the models.
+
 ---
 
 ## 5. Alembic workflow

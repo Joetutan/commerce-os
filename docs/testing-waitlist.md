@@ -109,7 +109,7 @@ Coverage gaps left after `tests/test_cart_mvp.py` (16 tests).
 - [ ] Cap race: two adds that each fit under `99` alone but not together; exactly one succeeds and the line never exceeds `99`.
 - [ ] `IntegrityError` on `insert_item` from a foreign-key failure (variant deleted mid-request) does not surface as `409 "Quantity limit exceeded"`.
 - [ ] `POST` with an idempotency key replays safely (deferred until checkout).
-- [ ] Multi-currency cart is rejected or normalized rather than silently mixing currencies.
+- [ ] Multi-currency is out of scope: a mixed-currency cart is rejected at checkout rather than converted.
 - [ ] A line whose product is archived after being added stays visible and removable.
 - [ ] A line whose variant is deleted by the catalog admin disappears or raises a defined error.
 - [ ] Raw insert with `quantity = 0` violates `ck_cart_items_quantity`.
@@ -122,6 +122,23 @@ Coverage gaps left after `tests/test_cart_mvp.py` (16 tests).
 - [ ] `PUT`/`PATCH` on `/api/v1/cart` root is rejected or defined.
 - [ ] Cart response exposes no more product fields than `id`, `slug`, and `name`.
 - [ ] Response currency is `null` exactly when the cart is empty.
+
+## Orders
+
+Phase one is planned in [`orders-todo.md`](orders-todo.md); no order tests exist yet.
+
+- [ ] Two concurrent checkouts for one user: `FOR UPDATE` yields exactly one order; the other gets `409 "Cart is empty"`.
+- [ ] An item added while checkout is running is either ordered or left in the cart, never silently deleted.
+- [ ] Checkout clears the cart in the same transaction; a failed insert leaves the cart intact.
+- [ ] `Idempotency-Key` replay does not create a second order (deferred).
+- [ ] A mixed-currency cart is rejected with `409`; no conversion is attempted.
+- [ ] A line whose product was archived after being added is rejected at checkout.
+- [ ] Snapshot immutability: changing the catalog price or name after checkout does not change the order.
+- [ ] Deleting a product, variant, or user leaves the order readable (`SET NULL` plus snapshots).
+- [ ] Concurrent transitions: two admins cannot both move the same order out of a state.
+- [ ] A customer cannot read or cancel another user's order.
+- [ ] Invalid transitions return `409`; customer cancel is limited to `pending`.
+- [ ] Raw insert with `quantity <= 0` or negative totals violates the order checks.
 
 ## End-to-end and security
 
